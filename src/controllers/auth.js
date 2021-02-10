@@ -1,10 +1,27 @@
 import {Users} from "../models/";
-
+import bcrypt from "bcryptjs";
+import {generateJWT} from "../middlewares/jwt";
 //1. Completar la logica para manejar el inicio de sesión
 // - responder con un codigo de estado 401 cuando las credenciales sean incorrectas
 // - responder con un mensaje (message) y codigo de estado 200 cuando las credenciales sean correctas
 // - responder con el token jwt (token) 
 export const login = async (req, res) => {
+    const {email, password} = req.body;
+    const results = await Users.findOne({where: {email: email}});
+    if(results){
+        const valid = bcrypt.compareSync(password, results.password);
+        if(valid){
+            const token = generateJWT(results);
+            return res.status(200).json({
+                message:token
+            });
+        }
+        return res.status(200).json({
+            message: "Las credenciales son incorrectas"
+        });
+    }
+    return res.status(401).send();
+
 
 }
 
@@ -24,9 +41,15 @@ export const signIn = async (req, res) => {
                 res.status(400).send();
             }
             else{
-                console.log("creando");
-                //const r = await Users.create()
-                
+                let hashPass = bcrypt.hashSync(data.password, 10);
+                data.password = hashPass;
+                const r = await Users.create(data)  
+                if(r){
+                    res.status(201).json(r);
+                }
+                else{
+                    res.status(400);
+                }
             }
         }
         else{
