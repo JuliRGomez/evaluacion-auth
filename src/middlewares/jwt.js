@@ -16,9 +16,18 @@ export const generateJWT = (user) => {
 
 //Validar el token 
 //const validateJWT = (req, res) => {
-export const  validateJWT = (req,res)=>{
-    const token = req.header('token');
+export const  validateJWT = (token)=>{
+    //console.log(req);
+
  //const verify= jwt.verify(token, secretOrPublicKey, ["HS384", callback])
- const verify = jwt.verify(token,process.env.SECRET_KEY);
- console.log(verify);
+ try {
+    const verify = jwt.verify(token,process.env.SECRET_KEY);
+ return(verify);
+ }
+ catch(error){
+     return false;
+ }
+ 
+ //res.json(verify)
+ //console.log(verify);
 }

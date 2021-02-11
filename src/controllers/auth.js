@@ -1,6 +1,6 @@
 import {Users} from "../models/";
 import bcrypt from "bcryptjs";
-import {generateJWT} from "../middlewares/jwt";
+import {generateJWT,validateJWT} from "../middlewares/jwt";
 //1. Completar la logica para manejar el inicio de sesión
 // - responder con un codigo de estado 401 cuando las credenciales sean incorrectas
 // - responder con un mensaje (message) y codigo de estado 200 cuando las credenciales sean correctas
@@ -13,10 +13,11 @@ export const login = async (req, res) => {
         if(valid){
             const token = generateJWT(results);
             return res.status(200).json({
-                message:token
+                message:"",
+                token:token
             });
         }
-        return res.status(200).json({
+        return res.status(401).json({
             message: "Las credenciales son incorrectas"
         });
     }
@@ -38,7 +39,7 @@ export const signIn = async (req, res) => {
                 }
             })
             if(result){
-                res.status(400).send();
+                res.status(400).json({message:""});
             }
             else{
                 let hashPass = bcrypt.hashSync(data.password, 10);
@@ -53,7 +54,7 @@ export const signIn = async (req, res) => {
             }
         }
         else{
-        return res.status(400).send();
+        return res.status(400).json({message:""});
         }
 
        
@@ -65,6 +66,37 @@ export const signIn = async (req, res) => {
    
 
     
+}
+
+export const validate = async (req,res) =>{
+    const r = req.get('Authorization','Bearer');
+    const token=r.split(' ');
+    if(validateJWT(token[1])){
+        const result= await Users.findOne({
+            where:{
+                id:req.params.id
+            }
+        });
+        if (result){
+            res.json(result);
+        }
+    }
+}
+
+export const getUsers = async (req,res) => {
+    const r = req.get('Authorization','Bearer');
+    const token=r.split(' ');
+    if(validateJWT(token[1])){
+        const result= await Users.findAll({
+        
+        });
+        if(result){
+            res.json(result);
+        }
+    }
+    else{
+        res.status(401).json({message:""});
+    }
 }
 
 const check = (data) =>{
